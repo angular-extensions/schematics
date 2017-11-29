@@ -1,4 +1,4 @@
-#Angular Extension Schematics
+# Angular Extension Schematics
 by [@tomastrajan](https://twitter.com/tomastrajan)
 
 [![license](https://img.shields.io/github/license/angular-extensions/schematics.svg)](https://github.com/angular-extensions/schematics/blob/master/LICENSE) [![Build Status](https://travis-ci.org/angular-extensions/schematics.svg?branch=master)](https://travis-ci.org/angular-extensions/schematics) [![Twitter Follow](https://img.shields.io/twitter/follow/tomastrajan.svg?style=social&label=Follow)](https://twitter.com/tomastrajan)
