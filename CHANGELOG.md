@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="1.0.1"></a>
+## [1.0.1](https://github.com/angular-extensions/schematics/compare/v1.0.0...v1.0.1) (2018-02-10)
+
+
+### Bug Fixes
+
+* **release:** release script ([ba06577](https://github.com/angular-extensions/schematics/commit/ba06577))
+
+
+
 <a name="1.0.0"></a>
 # 1.0.0 (2018-02-10)
 
