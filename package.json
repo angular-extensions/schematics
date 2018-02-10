@@ -1,6 +1,6 @@
 {
   "name": "@angular-extensions/schematics",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Angular Extensions schematics collection",
   "scripts": {
     "build": "tsc -p tsconfig.json",
