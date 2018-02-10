@@ -30,5 +30,13 @@
   },
   "peerDependencies": {
     "ngx-model": ">=5.0.0"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angular-extensions/schematics.git"
+  },
+  "bugs": {
+    "url": "https://github.com/angular-extensions/schematics/issues"
+  },
+  "homepage": "https://github.com/angular-extensions/schematics#readme"
 }
