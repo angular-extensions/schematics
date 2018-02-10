@@ -10,6 +10,8 @@ by [@tomastrajan](https://twitter.com/tomastrajan)
 4. or with `ng g model path/my-collection-model --items --collection @angular-extensions/schematics` form model of collection of items
 5. add your own model service methods and tests
 
+![Generating model using schematics](https://raw.githubusercontent.com/angular-extensions/schematics/master/assets/model-schematics.gif)
+
 ## Supported schematics
 * model
 * themed-component (coming soon)
