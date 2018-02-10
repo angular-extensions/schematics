@@ -1,16 +1,17 @@
 {
   "name": "@angular-extensions/schematics",
   "version": "0.0.0",
-  "description": "A schematics",
+  "description": "Angular Extensions schematics collection",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "npm run build && jasmine **/*_spec.js"
+    "test": "npm run build && jasmine **/*_spec.js",
+    "release": "standard-version && git push --follow-tags origin master"
   },
   "keywords": [
     "schematics",
     "angular"
   ],
-  "author": "",
+  "author": "Tomas Trajan <tomas.trajan@gmail.com>",
   "license": "MIT",
   "schematics": "./src/collection.json",
   "dependencies": {
@@ -24,7 +25,8 @@
   },
   "devDependencies": {
     "ngx-model": "^5.0.0",
-    "rxjs": "^5.5.6"
+    "rxjs": "^5.5.6",
+    "standard-version": "^4.3.0"
   },
   "peerDependencies": {
     "ngx-model": ">=5.0.0"
