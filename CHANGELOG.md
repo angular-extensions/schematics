@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+<a name="6.0.0"></a>
+# [6.0.0](https://github.com/angular-extensions/schematics/compare/v1.0.3...v6.0.0) (2018-09-24)
+
+
+### Features
+
+* **model:** migrate to new architecture ([@angular-devkit](https://github.com/angular-devkit) 0.8.3) ([b2f7964](https://github.com/angular-extensions/schematics/commit/b2f7964))
+
+
+
 <a name="1.0.3"></a>
 ## [1.0.3](https://github.com/angular-extensions/schematics/compare/v1.0.2...v1.0.3) (2018-02-10)
 
