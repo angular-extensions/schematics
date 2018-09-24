@@ -1,10 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Model, ModelFactory } from 'ngx-model';
-import { Observable } from 'rxjs/Observable';
+import { Observable } from 'rxjs';
 
 const initialData: <%= classify(name) %><% if(items) { %>[]<% } %> = <% if(items) { %>[]<% } else { %>{ prop: 'value' }<% } %>;
 
-@Injectable()
+<% if(module) { %>
+@Injectable()<% } else { %>
+@Injectable({
+    providedIn: 'root'
+})<% } %>
 export class <%= classify(name) %>Service {
   private model: Model<<%= classify(name) %><% if(items) { %>[]<% } %>>;
 

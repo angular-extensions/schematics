@@ -5,7 +5,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "npm run build && jasmine **/*_spec.js",
-    "release": "npm run build && standard-version && git push --follow-tags origin master && npm publish --access public"
+    "format": "prettier src/**/*.{ts,json,md} --write",
+    "format:test": "prettier src/**/*.{ts,json,md} --list-different",
+    "release": "npm run format && npm run build && standard-version && git push --follow-tags origin master && npm publish --access public"
   },
   "keywords": [
     "schematics",
@@ -15,21 +17,23 @@
   "license": "MIT",
   "schematics": "./src/collection.json",
   "dependencies": {
-    "@angular-devkit/core": "^0.3.1",
-    "@angular-devkit/schematics": "^0.3.1",
-    "@schematics/angular": "^0.3.1",
-    "@types/jasmine": "^2.6.0",
+    "@angular-devkit/core": "^0.8.2",
+    "@angular-devkit/schematics": "^0.8.2",
+    "@schematics/angular": "^0.8.2",
+    "@types/jasmine": "^2.8.0",
     "@types/node": "^8.0.31",
     "jasmine": "^2.8.0",
-    "typescript": "~2.6.2"
+    "typescript": "^2.9.0"
   },
   "devDependencies": {
-    "ngx-model": "^5.0.0",
-    "rxjs": "^5.5.6",
+    "@angular/core": "^6.0.0",
+    "ngx-model": "^6.0.0",
+    "prettier": "^1.14.3",
+    "rxjs": "^6.0.0",
     "standard-version": "^4.3.0"
   },
   "peerDependencies": {
-    "ngx-model": ">=5.0.0"
+    "ngx-model": ">=6.0.0"
   },
   "repository": {
     "type": "git",

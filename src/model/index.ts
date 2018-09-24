@@ -1,93 +1,121 @@
-import { normalize, strings } from '@angular-devkit/core';
 import {
-  Rule,
-  SchematicContext,
-  SchematicsException,
-  Tree,
   apply,
   branchAndMerge,
   chain,
   filter,
+  MergeStrategy,
   mergeWith,
   move,
   noop,
+  Rule,
+  SchematicContext,
+  SchematicsException,
   template,
-  url,
+  Tree,
+  url
 } from '@angular-devkit/schematics';
 import * as ts from 'typescript';
+import { strings } from '@angular-devkit/core';
+import { getWorkspace } from '@schematics/angular/utility/config';
+import { buildDefaultPath } from '@schematics/angular/utility/project';
+import { buildRelativePath } from '@schematics/angular/utility/find-module';
 import { addProviderToModule } from '@schematics/angular/utility/ast-utils';
+import { parseName } from '@schematics/angular/utility/parse-name';
+import { applyLintFix } from '@schematics/angular/utility/lint-fix';
 import { InsertChange } from '@schematics/angular/utility/change';
-import { buildRelativePath, findModuleFromOptions } from '@schematics/angular/utility/find-module';
-import { Schema as ServiceOptions } from './schema';
 
+import { Schema as ModelServiceOptions } from './schema';
 
-function addProviderToNgModule(options: ServiceOptions): Rule {
-  return (host: Tree) => {
-    if (!options.module) {
-      return host;
+export function modelService(options: ModelServiceOptions): Rule {
+  return (host: Tree, _context: SchematicContext) => {
+    const workspace = getWorkspace(host);
+    if (!options.project) {
+      throw new SchematicsException('Option (project) is required.');
+    }
+    const project = workspace.projects[options.project];
+
+    if (options.path === undefined) {
+      options.path = buildDefaultPath(project);
     }
 
-    const modulePath = options.module;
-    if (!host.exists(options.module)) {
-      throw new Error('Specified module does not exist');
-    }
-
-    const text = host.read(modulePath);
-    if (text === null) {
-      throw new SchematicsException(`File ${modulePath} does not exist.`);
-    }
-    const sourceText = text.toString('utf-8');
-
-    const source = ts.createSourceFile(modulePath, sourceText, ts.ScriptTarget.Latest, true);
-
-    const servicePath = `/${options.sourceDir}/${options.path}/`
-      + (options.flat ? '' : strings.dasherize(options.name) + '/')
-      + strings.dasherize(options.name)
-      + '.service';
-    const relativePath = buildRelativePath(modulePath, servicePath);
-    const changes = addProviderToModule(source, modulePath,
-      strings.classify(`${options.name}Service`),
-      relativePath);
-    const recorder = host.beginUpdate(modulePath);
-    for (const change of changes) {
-      if (change instanceof InsertChange) {
-        recorder.insertLeft(change.pos, change.toAdd);
-      }
-    }
-    host.commitUpdate(recorder);
-
-    return host;
-  };
-}
-
-export default function (options: ServiceOptions): Rule {
-  options.path = options.path ? normalize(options.path) : options.path;
-  const sourceDir = options.sourceDir;
-  if (!sourceDir) {
-    throw new SchematicsException(`sourceDir option is required.`);
-  }
-
-  return (host: Tree, context: SchematicContext) => {
-    if (options.module) {
-      options.module = findModuleFromOptions(host, options);
-    }
+    const parsedPath = parseName(options.path, options.name);
+    options.name = parsedPath.name;
+    options.path = parsedPath.path;
 
     const templateSource = apply(url('./files'), [
       options.spec ? noop() : filter(path => !path.endsWith('.spec.ts')),
       template({
         ...strings,
-        'if-flat': (s: string) => options.flat ? '' : s,
-        ...options,
+        'if-flat': (s: string) => (options.flat ? '' : s),
+        ...options
       }),
-      move(sourceDir),
+      move(parsedPath.path)
     ]);
 
     return chain([
-      branchAndMerge(chain([
-        filter(path => path.endsWith('.module.ts') && !path.endsWith('-routing.module.ts')),
-        addProviderToNgModule(options),
-        mergeWith(templateSource),
-      ])),
-    ])(host, context);
+      branchAndMerge(
+        chain([
+          addToNgModuleProviders(options),
+          mergeWith(templateSource, MergeStrategy.Default)
+        ])
+      ),
+      options.lintFix ? applyLintFix(options.path) : noop()
+    ]);
+
+    return chain([
+      mergeWith(templateSource, MergeStrategy.Default),
+      options.lintFix ? applyLintFix(options.path) : noop()
+    ])(host, _context);
   };
+}
+
+function addToNgModuleProviders(options: ModelServiceOptions): Rule {
+  return (host: Tree) => {
+    if (!options.module) {
+      return host;
+    }
+
+    const modulePath = `${options.path}/${options.module}`;
+    const moduleSource = readIntoSourceFile(host, modulePath);
+
+    const servicePath =
+      `${options.path}/` +
+      (options.flat ? '' : strings.dasherize(options.name) + '/') +
+      strings.dasherize(options.name) +
+      '.service';
+
+    const relativePath = buildRelativePath(modulePath, servicePath);
+    const classifiedName = strings.classify(`${options.name}Service`);
+    const providersChanges = addProviderToModule(
+      moduleSource,
+      modulePath,
+      classifiedName,
+      relativePath
+    );
+
+    const providersRecorder = host.beginUpdate(modulePath);
+    for (const change of providersChanges) {
+      if (change instanceof InsertChange) {
+        providersRecorder.insertLeft(change.pos, change.toAdd);
+      }
+    }
+    host.commitUpdate(providersRecorder);
+
+    return host;
+  };
+}
+
+function readIntoSourceFile(host: Tree, modulePath: string): ts.SourceFile {
+  const text = host.read(modulePath);
+  if (text === null) {
+    throw new SchematicsException(`File ${modulePath} does not exist.`);
+  }
+  const sourceText = text.toString('utf-8');
+
+  return ts.createSourceFile(
+    modulePath,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true
+  );
 }

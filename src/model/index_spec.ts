@@ -1,73 +1,181 @@
-import { Tree, VirtualTree } from '@angular-devkit/schematics';
-import { SchematicTestRunner } from '@angular-devkit/schematics/testing';
 import * as path from 'path';
-import { createAppModule, getFileContent } from '@schematics/angular/utility/test';
-import { Schema as ServiceOptions } from './schema';
+import {
+  SchematicTestRunner,
+  UnitTestTree
+} from '@angular-devkit/schematics/testing';
+import { Schema as ApplicationOptions } from '@schematics/angular/application/schema';
+import { Schema as WorkspaceOptions } from '@schematics/angular/workspace/schema';
+import { Schema as ModelOptions } from './schema';
 
+const workspaceOptions: WorkspaceOptions = {
+  name: 'workspace',
+  newProjectRoot: 'projects',
+  version: '6.0.0'
+};
 
-describe('Pipe Schematic', () => {
-  const schematicRunner = new SchematicTestRunner(
-    '@schematics/angular',
-    path.join(__dirname, '../collection.json'),
-  );
-  const defaultOptions: ServiceOptions = {
-    name: 'foo',
-    path: 'app',
-    sourceDir: 'src',
-    spec: true,
-    module: undefined,
-    flat: false,
-  };
+const appOptions: ApplicationOptions = {
+  name: 'bar',
+  inlineStyle: false,
+  inlineTemplate: false,
+  routing: false,
+  style: 'css',
+  skipTests: false,
+  skipPackageJson: false
+};
 
-  let appTree: Tree;
+const defaultOptions: ModelOptions = {
+  name: 'foo',
+  spec: true,
+  flat: false,
+  project: 'bar'
+};
 
+const collectionPath = path.join(__dirname, '../collection.json');
+const runner = new SchematicTestRunner('schematics', collectionPath);
+
+let appTree: UnitTestTree;
+
+describe('Model Schematic', () => {
   beforeEach(() => {
-    appTree = new VirtualTree();
-    appTree = createAppModule(appTree);
+    appTree = runner.runExternalSchematic(
+      '@schematics/angular',
+      'workspace',
+      workspaceOptions
+    );
+    appTree = runner.runExternalSchematic(
+      '@schematics/angular',
+      'application',
+      appOptions,
+      appTree
+    );
   });
 
-  it('should create a service', () => {
+  it('should create a model service', () => {
     const options = { ...defaultOptions };
 
-    const tree = schematicRunner.runSchematic('model', options, appTree);
-    const files = tree.files;
-    expect(files.indexOf('/src/app/foo/foo.service.spec.ts')).toBeGreaterThanOrEqual(0);
-    expect(files.indexOf('/src/app/foo/foo.service.ts')).toBeGreaterThanOrEqual(0);
+    const tree = runner.runSchematic('model', options, appTree);
+    expect(tree.files).toContain('/projects/bar/src/app/foo/foo.service.ts');
+    expect(tree.files).toContain(
+      '/projects/bar/src/app/foo/foo.service.spec.ts'
+    );
   });
 
-  it('should not be provided by default', () => {
-    const options = { ...defaultOptions };
+  it('should create a model service respecting path as part of name', () => {
+    const options = { ...defaultOptions, name: 'path/foo' };
 
-    const tree = schematicRunner.runSchematic('model', options, appTree);
-    const content = getFileContent(tree, '/src/app/app.module.ts');
-    expect(content).not.toMatch(/import { FooService } from '.\/foo\/foo.service'/);
+    const tree = runner.runSchematic('model', options, appTree);
+    expect(tree.files).toContain(
+      '/projects/bar/src/app/path/foo/foo.service.ts'
+    );
+    expect(tree.files).toContain(
+      '/projects/bar/src/app/path/foo/foo.service.spec.ts'
+    );
   });
 
-  it('should import into a specified module', () => {
-    const options = { ...defaultOptions, module: 'app.module.ts' };
+  it('should create a model service respecting path as param', () => {
+    const options = { ...defaultOptions, name: 'foo', path: 'path' };
 
-    const tree = schematicRunner.runSchematic('model', options, appTree);
-    const content = getFileContent(tree, '/src/app/app.module.ts');
-    expect(content).toMatch(/import { FooService } from '.\/foo\/foo.service'/);
+    const tree = runner.runSchematic('model', options, appTree);
+    expect(tree.files).toContain(
+      '/path/foo/foo.service.ts'
+    );
+    expect(tree.files).toContain(
+      '/path/foo/foo.service.spec.ts'
+    );
   });
 
-  it('should fail if specified module does not exist', () => {
-    const options = { ...defaultOptions, module: '/src/app/app.moduleXXX.ts' };
-    let thrownError: Error | null = null;
-    try {
-      schematicRunner.runSchematic('model', options, appTree);
-    } catch (err) {
-      thrownError = err;
-    }
-    expect(thrownError).toBeDefined();
+  it('should respect the flat flag', () => {
+    const options = { ...defaultOptions, flat: true };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    expect(tree.files).toContain('/projects/bar/src/app/foo.service.ts');
+    expect(tree.files).toContain('/projects/bar/src/app/foo.service.spec.ts');
   });
 
   it('should respect the spec flag', () => {
     const options = { ...defaultOptions, spec: false };
 
-    const tree = schematicRunner.runSchematic('model', options, appTree);
-    const files = tree.files;
-    expect(files.indexOf('/src/app/foo/foo.service.ts')).toBeGreaterThanOrEqual(0);
-    expect(files.indexOf('/src/app/foo/foo.service.spec.ts')).toEqual(-1);
+    const tree = runner.runSchematic('model', options, appTree);
+    expect(tree.files).toContain('/projects/bar/src/app/foo/foo.service.ts');
+    expect(tree.files).not.toContain(
+      '/projects/bar/src/app/foo/foo.service.spec.ts'
+    );
+  });
+
+  it('should respect the sourceRoot value', () => {
+    const config = JSON.parse(appTree.readContent('/angular.json'));
+    config.projects.bar.sourceRoot = 'projects/bar/custom';
+    appTree.overwrite('/angular.json', JSON.stringify(config, null, 2));
+    const tree = runner.runSchematic('model', defaultOptions, appTree);
+    expect(tree.files).toContain('/projects/bar/custom/app/foo/foo.service.ts');
+  });
+
+  it('should be tree-shakeable if no module is set', () => {
+    const options = { ...defaultOptions };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    const content = tree.readContent(
+      '/projects/bar/src/app/foo/foo.service.ts'
+    );
+    expect(content).toMatch(/providedIn: 'root'/);
+  });
+
+  it('should not be tree-shakeable if module is set', () => {
+    const options = { ...defaultOptions, module: '/app.module.ts' };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    const content = tree.readContent(
+      '/projects/bar/src/app/foo/foo.service.ts'
+    );
+    expect(content).not.toMatch(/providedIn: 'root'/);
+  });
+
+  it('should create model interface', () => {
+    const options = { ...defaultOptions };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    const content = tree.readContent(
+      '/projects/bar/src/app/foo/foo.service.ts'
+    );
+    expect(content).toMatch(/interface Foo {\n  prop: string;\n}/);
+  });
+
+  it('should create model collection with items flag', () => {
+    const options = { ...defaultOptions, items: true };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    const content = tree.readContent(
+      '/projects/bar/src/app/foo/foo.service.ts'
+    );
+    expect(content).toMatch(/private model: Model<Foo\[\]>;/);
+  });
+
+  it('should not be provided by default', () => {
+    const options = { ...defaultOptions };
+
+    const tree = runner.runSchematic('model', options, appTree);
+      const content = tree.readContent('/projects/bar/src/app/app.module.ts');
+    expect(content).not.toMatch(
+      /import { FooService } from '.\/foo\/foo.service'/
+    );
+  });
+
+  it('should import into a specified module', () => {
+    const options = { ...defaultOptions, module: 'app.module.ts' };
+
+    const tree = runner.runSchematic('model', options, appTree);
+    const content = tree.readContent('/projects/bar/src/app/app.module.ts');
+    expect(content).toMatch(/import { FooService } from '.\/foo\/foo.service'/);
+  });
+
+  it('should fail if specified module does not exist', () => {
+    const options = { ...defaultOptions, module: 'app.moduleXXX.ts' };
+    let thrownError: Error | null = null;
+    try {
+      runner.runSchematic('model', options, appTree);
+    } catch (err) {
+      thrownError = err;
+    }
+    expect(thrownError).toBeDefined();
   });
 });
