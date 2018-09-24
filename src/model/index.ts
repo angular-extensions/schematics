@@ -60,11 +60,6 @@ export function modelService(options: ModelServiceOptions): Rule {
         ])
       ),
       options.lintFix ? applyLintFix(options.path) : noop()
-    ]);
-
-    return chain([
-      mergeWith(templateSource, MergeStrategy.Default),
-      options.lintFix ? applyLintFix(options.path) : noop()
     ])(host, _context);
   };
 }

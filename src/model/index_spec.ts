@@ -76,12 +76,8 @@ describe('Model Schematic', () => {
     const options = { ...defaultOptions, name: 'foo', path: 'path' };
 
     const tree = runner.runSchematic('model', options, appTree);
-    expect(tree.files).toContain(
-      '/path/foo/foo.service.ts'
-    );
-    expect(tree.files).toContain(
-      '/path/foo/foo.service.spec.ts'
-    );
+    expect(tree.files).toContain('/path/foo/foo.service.ts');
+    expect(tree.files).toContain('/path/foo/foo.service.spec.ts');
   });
 
   it('should respect the flat flag', () => {
@@ -154,7 +150,7 @@ describe('Model Schematic', () => {
     const options = { ...defaultOptions };
 
     const tree = runner.runSchematic('model', options, appTree);
-      const content = tree.readContent('/projects/bar/src/app/app.module.ts');
+    const content = tree.readContent('/projects/bar/src/app/app.module.ts');
     expect(content).not.toMatch(
       /import { FooService } from '.\/foo\/foo.service'/
     );
