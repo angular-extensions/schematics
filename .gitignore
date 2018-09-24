@@ -1,4 +1,7 @@
 # Outputs
+src/**/index.d.ts
+src/**/index_spec.d.ts
+src/**/*.js
 src/**/*.js.map
 
 # IDEs
