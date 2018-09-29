@@ -1,4 +1,6 @@
-# ⚠️ IMPORTANT - THIS REPO / PACKAGE HAS BEEN DEPRECATED
+# ⚠️ IMPORTANT
+# THIS REPO / PACKAGE HAS BEEN DEPRECATED
+
 Please use new `@angular-extensions/model`[package](https://www.npmjs.com/package/@angular-extensions/model) / [repo](https://github.com/angular-extensions/model) which is a combination of both the model library and related schematics which renders this package uselsess.
 
 # Angular Extensions Schematics
